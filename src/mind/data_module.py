@@ -48,7 +48,7 @@ class MINDDataModule(pl.LightningDataModule):
         return DataLoader(
             self.val_dataset,
             batch_size=self.params.batch_size,
-            collate_fn=MINDCollateVal(self.tokenizer),
+            collate_fn=MINDCollateVal(),
             shuffle=False,
             num_workers=cpu_count(),
             pin_memory=True,

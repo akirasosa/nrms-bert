@@ -113,7 +113,6 @@ class MINDDatasetVal(Dataset):
                 'title': tokenizer(
                     x['title'],
                     x['category'],
-                    # x['title'],
                     return_tensors='pt',
                     return_token_type_ids=False,
                     truncation=True,
@@ -133,15 +132,32 @@ class MINDDatasetVal(Dataset):
         return dict(zip(indices, inputs))
 
 
+def _make_batch_assignees(items: Sequence[Sequence[Any]]) -> torch.Tensor:
+    sizes = torch.tensor([len(x) for x in items])
+    batch = torch.repeat_interleave(torch.arange(len(items)), sizes)
+    return batch
+
+
 @dataclass
-class _MINDCollateBase:
+class MINDCollateTrain:
     tokenizer: PreTrainedTokenizer
 
-    @staticmethod
-    def make_batch_assignees(items: Sequence[Sequence[Any]]) -> torch.Tensor:
-        sizes = torch.tensor([len(x) for x in items])
-        batch = torch.repeat_interleave(torch.arange(len(items)), sizes)
-        return batch
+    def __call__(self, batch):
+        histories, candidates, targets = zip(*batch)
+
+        batch_hist = _make_batch_assignees(histories)
+        batch_cand = _make_batch_assignees(candidates)
+
+        x_hist = self._tokenize_df(pd.concat(histories))
+        x_cand = self._tokenize_df(pd.concat(candidates))
+
+        return MINDBatch(
+            batch_hist=batch_hist,
+            batch_cand=batch_cand,
+            x_hist=x_hist,
+            x_cand=x_cand,
+            targets=torch.tensor(targets),
+        )
 
     def _tokenize(self, x: List[str]):
         return self.tokenizer(
@@ -163,35 +179,15 @@ class _MINDCollateBase:
 
 
 @dataclass
-class MINDCollateTrain(_MINDCollateBase):
-    def __call__(self, batch):
-        histories, candidates, targets = zip(*batch)
-
-        batch_hist = self.make_batch_assignees(histories)
-        batch_cand = self.make_batch_assignees(candidates)
-
-        x_hist = self._tokenize_df(pd.concat(histories))
-        x_cand = self._tokenize_df(pd.concat(candidates))
-
-        return MINDBatch(
-            batch_hist=batch_hist,
-            batch_cand=batch_cand,
-            x_hist=x_hist,
-            x_cand=x_cand,
-            targets=torch.tensor(targets),
-        )
-
-
-@dataclass
-class MINDCollateVal(_MINDCollateBase):
+class MINDCollateVal:
     is_test: bool = False
 
     def __call__(self, batch):
         # It gets precomputed inputs.
         histories, candidates, targets = zip(*batch)
 
-        batch_hist = self.make_batch_assignees(histories)
-        batch_cand = self.make_batch_assignees(candidates)
+        batch_hist = _make_batch_assignees(histories)
+        batch_cand = _make_batch_assignees(candidates)
 
         x_hist = torch.cat(histories)
         x_cand = torch.cat(candidates)
@@ -287,7 +283,7 @@ if __name__ == '__main__':
     # %%
     ds_val = get_val_dataset(base_dir='../data/mind-demo', tokenizer=tokenizer)
     ds_val.init_dummy_feature_map(100)
-    collate_fn = MINDCollateVal(tokenizer)
+    collate_fn = MINDCollateVal()
     batch = collate_fn([ds_val[0], ds_val[1]])
 
     # %%
@@ -298,5 +294,5 @@ if __name__ == '__main__':
     # %%
     ds_test = get_test_dataset(base_dir='../data/mind-large', tokenizer=tokenizer)
     ds_test.init_dummy_feature_map(100)
-    collate_fn = MINDCollateVal(tokenizer)
+    collate_fn = MINDCollateVal()
     batch = collate_fn([ds_test[0], ds_test[1]])
