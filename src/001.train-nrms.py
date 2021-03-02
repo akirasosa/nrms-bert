@@ -18,11 +18,11 @@ from tqdm import tqdm
 
 from libs.pytorch_lightning.logging import configure_logging
 from libs.torch.avg_meter import AverageMeter
+from libs.torch.metric import ndcg_score
 from mind.batch import MINDBatch
 from mind.data_module import MINDDataModule
 from mind.dataset import MINDDatasetVal
-from libs.torch.metric import ndcg_score
-from mind.params import ModuleParams, Params, columns_default
+from mind.params import ModuleParams, Params
 from models.nrms import NRMS
 
 
@@ -41,7 +41,6 @@ class PLModule(pl.LightningModule):
         self.model = NRMS(
             pretrained_model_name=self.hp.pretrained_model_name,
             sa_pretrained_model_name=self.hp.sa_pretrained_model_name,
-            columns=columns_default,
         )
         self.am = AverageMeterSet()
         self.total_processed = 0

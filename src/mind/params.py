@@ -5,14 +5,6 @@ from libs.params import ParamsMixIn
 
 pretrained_model_name_default = 'distilbert-base-uncased'
 sa_pretrained_model_name_default = 'distilbert-base-uncased'
-# sa_pretrained_model_name_default = 'bert-base-uncased'
-# pretrained_model_name_default = 'sentence-transformers/paraphrase-distilroberta-base-v1'
-# sa_pretrained_model_name_default = 'sentence-transformers/paraphrase-distilroberta-base-v1'
-
-columns_default = ['title', 'category', 'abstract_tfidf_40', 'title_tfidf_40']
-
-
-# columns_default = ['title']
 
 
 @dataclasses.dataclass(frozen=True)

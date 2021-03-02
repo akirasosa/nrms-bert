@@ -1,5 +1,3 @@
-from typing import Sequence
-
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -56,14 +54,12 @@ class ContentsEncoder(nn.Module):
     def __init__(
             self,
             pretrained_model_name: str,
-            columns: Sequence[str],
     ):
         super().__init__()
         bert = AutoModel.from_pretrained(pretrained_model_name)
         self.dim = bert.config.hidden_size
 
         self.bert = bert
-        self.columns = columns
         self.pooler = nn.Sequential(
             nn.Linear(self.dim, self.dim),
             nn.Dropout(0.01),
@@ -86,10 +82,9 @@ class NRMS(nn.Module):
             self,
             pretrained_model_name: str,
             sa_pretrained_model_name: str,
-            columns: Sequence[str] = tuple(['title']),
     ):
         super(NRMS, self).__init__()
-        self.encoder = ContentsEncoder(pretrained_model_name, columns=columns)
+        self.encoder = ContentsEncoder(pretrained_model_name)
 
         dim = self.encoder.dim
 
