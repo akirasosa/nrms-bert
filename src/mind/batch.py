@@ -5,12 +5,11 @@ from transformers import BatchEncoding
 
 
 class ContentsEncoded(TypedDict):
+    # Only title is used.
     title: BatchEncoding
     abstract: BatchEncoding
     category: torch.Tensor
     subcategory: torch.Tensor
-    abstract_tfidf_40: torch.Tensor
-    title_tfidf_40: torch.Tensor
 
 
 class MINDBatch(TypedDict):

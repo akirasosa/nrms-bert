@@ -88,8 +88,8 @@ class NRMS(nn.Module):
 
         dim = self.encoder.dim
 
-        # Though it's trained for token to token attention,
-        # it also works as a good initialization for sentence to sentence attention.
+        # Use pre trained self attention.
+        # Though this weight is for token level attention, it also works as a good initialization for seq level attention.
         bert = AutoModel.from_pretrained(sa_pretrained_model_name)
         self.self_attn = bert.transformer.layer[-1]  # DistilBERT
         self.additive_attn = AdditiveAttention(dim, 0.5)
