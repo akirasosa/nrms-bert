@@ -99,16 +99,16 @@ class PLModule(pl.LightningModule):
             lr=self.hp.lr,
             weight_decay=self.hp.weight_decay,
         )
-        sched = {
-            'scheduler': OneCycleLR(
-                opt,
-                max_lr=self.hp.lr,
-                total_steps=len(self.train_dataloader()) * self.trainer.max_epochs,
-            ),
-            'interval': 'step',
-        }
-        return [opt], [sched]
-        # return [opt]
+        # sched = {
+        #     'scheduler': OneCycleLR(
+        #         opt,
+        #         max_lr=self.hp.lr,
+        #         total_steps=len(self.train_dataloader()) * self.trainer.max_epochs,
+        #     ),
+        #     'interval': 'step',
+        # }
+        # return [opt], [sched]
+        return [opt]
 
     @cached_property
     def hp(self) -> ModuleParams:
@@ -132,7 +132,7 @@ def train(params: Params):
     logger.info(params.pretty())
 
     callbacks = [
-        LearningRateMonitor(),
+        # LearningRateMonitor(),
         # EarlyStopping(
         #     monitor='val_0_acc',
         #     patience=15,

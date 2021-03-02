@@ -111,9 +111,9 @@ class MINDDatasetVal(Dataset):
         inputs = [
             {
                 'title': tokenizer(
-                    # x['title'],
-                    x['category'],
                     x['title'],
+                    x['category'],
+                    # x['title'],
                     return_tensors='pt',
                     return_token_type_ids=False,
                     truncation=True,
@@ -154,7 +154,7 @@ class _MINDCollateBase:
 
     def _tokenize_df(self, df: pd.DataFrame):
         return {
-            'title': self._tokenize(df[['category', 'title']].values.tolist()),
+            'title': self._tokenize(df[['title', 'category']].values.tolist()),
             # 'title': self._tokenize(df['title'].values.tolist()),
             # 'abstract': self._tokenize(df['abstract'].values.tolist()),
             # 'category': torch.from_numpy(df['category_label'].values).long(),
