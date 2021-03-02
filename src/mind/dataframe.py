@@ -66,9 +66,9 @@ def load_news_df(base_dir: Union[Path, str]) -> pd.DataFrame:
 
     df: pd.DataFrame = pd.concat((df_train, df_val, df_test), ignore_index=True)
     df = df.drop_duplicates(subset=['n_id'])
+    df = df.set_index('n_id', drop=True)
 
     df['abstract'] = df['abstract'].fillna('')
-
     # df['category_label'] = LabelEncoder().fit_transform(df['category'])
     # df['subcategory_label'] = LabelEncoder().fit_transform(df['subcategory'])
 

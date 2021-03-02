@@ -19,21 +19,18 @@ class MINDDatasetTrain(Dataset):
     n_neg: int = 4
     hist_size: int = 50
 
-    def __post_init__(self):
-        self.nid2index = dict(zip(self.df_news['n_id'], self.df_news.index))
-
     def __getitem__(self, idx):
         bhv = self.df_behaviours.iloc[idx]
 
-        histories = np.array([self.nid2index[h] for h in bhv['histories']])
-        candidates = np.array([self.nid2index[h] for h in bhv['candidates']])
+        histories = bhv['histories']
+        candidates = bhv['candidates']
         labels = bhv['labels']
 
         histories = np.random.permutation(histories)[:self.hist_size]
         candidates, labels = self._sample_candidates(candidates, labels)
 
-        histories = self.df_news.drop(columns=['n_id']).loc[histories]
-        candidates = self.df_news.drop(columns=['n_id']).loc[candidates]
+        histories = self.df_news.loc[histories]
+        candidates = self.df_news.loc[candidates]
         labels = labels.argmax()
 
         return histories, candidates, labels
@@ -65,11 +62,9 @@ class MINDDatasetVal(Dataset):
     df_news: pd.DataFrame
     tokenizer: InitVar[PreTrainedTokenizer]
     hist_size: int = 50
-    nid2index: Mapping[str, int] = field(init=False)
-    news_feature_map: Mapping[int, torch.Tensor] = field(default_factory=dict)
+    news_feature_map: Mapping[str, torch.Tensor] = field(default_factory=dict)
 
     def __post_init__(self, tokenizer):
-        self.nid2index = dict(zip(self.df_news['n_id'], self.df_news.index))
         self._uniq_news_inputs = self._make_uniq_news_inputs(tokenizer)
 
     def __getitem__(self, idx):
@@ -77,12 +72,11 @@ class MINDDatasetVal(Dataset):
 
         bhv = self.df_behaviours.iloc[idx]
 
-        histories = np.array([self.nid2index[h] for h in bhv['histories']])
-        histories = histories[:self.hist_size]  # TODO consider more
-        candidates = np.array([self.nid2index[h] for h in bhv['candidates']])
+        # TODO consider more
+        histories = bhv['histories'][:self.hist_size]
+        candidates = bhv['candidates']
         labels = bhv['labels']
 
-        # histories = self.df_news.iloc[histories][self.columns]
         # Use precomputed features.
         histories = torch.stack([
             self.news_feature_map[idx]
@@ -105,16 +99,15 @@ class MINDDatasetVal(Dataset):
         }
 
     @property
-    def uniq_news_inputs(self) -> Mapping[int, ContentsEncoded]:
+    def uniq_news_inputs(self) -> Mapping[str, ContentsEncoded]:
         return self._uniq_news_inputs
 
-    def _make_uniq_news_inputs(self, tokenizer) -> Mapping[int, ContentsEncoded]:
+    def _make_uniq_news_inputs(self, tokenizer) -> Mapping[str, ContentsEncoded]:
         histories = np.concatenate(self.df_behaviours['histories'].values)
         candidates = np.concatenate(self.df_behaviours['candidates'].values)
-        uniq_nid = set(histories) | set(candidates)
 
-        indices = [self.nid2index[x] for x in uniq_nid]
-        inputs = self.df_news.drop(columns=['n_id']).loc[indices].to_dict('records')
+        indices = set(histories) | set(candidates)
+        inputs = self.df_news.loc[indices].to_dict('records')
         inputs = [
             {
                 'title': tokenizer(
@@ -131,8 +124,6 @@ class MINDDatasetVal(Dataset):
                 #     return_token_type_ids=False,
                 #     truncation=True,
                 # ),
-                # 'abstract_tfidf_40': torch.from_numpy(x['abstract_tfidf_40'].copy()).float().reshape(-1, 40),
-                # 'title_tfidf_40': torch.from_numpy(x['title_tfidf_40'].copy()).float().reshape(-1, 40),
                 # 'category': torch.tensor([x['category_label']]),
                 # 'subcategory': torch.tensor([x['subcategory_label']]),
             }
@@ -168,10 +159,6 @@ class _MINDCollateBase:
             # 'abstract': self._tokenize(df['abstract'].values.tolist()),
             # 'category': torch.from_numpy(df['category_label'].values).long(),
             # 'subcategory': torch.from_numpy(df['subcategory_label'].values).long(),
-            # 'abstract_tfidf_40': torch.from_numpy(
-            #     np.concatenate(df['abstract_tfidf_40'].values).reshape(-1, 40)).float(),
-            # 'title_tfidf_40': torch.from_numpy(
-            #     np.concatenate(df['title_tfidf_40'].values).reshape(-1, 40)).float(),
         }
 
 
@@ -206,7 +193,6 @@ class MINDCollateVal(_MINDCollateBase):
         batch_hist = self.make_batch_assignees(histories)
         batch_cand = self.make_batch_assignees(candidates)
 
-        # x_hist = self._tokenize_df(pd.concat(histories))
         x_hist = torch.cat(histories)
         x_cand = torch.cat(candidates)
         if self.is_test:
@@ -230,17 +216,13 @@ def get_train_dataset(base_dir: Union[str, Path]) -> MINDDatasetTrain:
     df_b = df_b[['histories', 'candidates', 'labels']]
 
     df_n = load_news_df(base_dir)
-    # df_n = df_n[df_n['split'] == 'train']
     df_n['category'] = df_n['category'] + ' > ' + df_n['subcategory']
     df_n = df_n[[
-        'n_id',
         'title',
         'category',
         # 'abstract',
         # 'category_label',
         # 'subcategory_label',
-        # 'abstract_tfidf_40',
-        # 'title_tfidf_40',
     ]]
 
     return MINDDatasetTrain(
@@ -255,17 +237,13 @@ def get_val_dataset(base_dir: Union[str, Path], tokenizer: PreTrainedTokenizer) 
     df_b = df_b[['histories', 'candidates', 'labels']]
 
     df_n = load_news_df(base_dir)
-    # df_n = df_n[df_n['split'] == 'valid']
     df_n['category'] = df_n['category'] + ' > ' + df_n['subcategory']
     df_n = df_n[[
-        'n_id',
         'title',
         'category',
         # 'abstract',
         # 'category_label',
         # 'subcategory_label',
-        # 'abstract_tfidf_40',
-        # 'title_tfidf_40',
     ]]
 
     return MINDDatasetVal(
@@ -281,17 +259,13 @@ def get_test_dataset(base_dir: Union[str, Path], tokenizer: PreTrainedTokenizer)
     df_b = df_b[['histories', 'candidates', 'labels']]
 
     df_n = load_news_df(base_dir)
-    # df_n = df_n[df_n['split'] == 'test']
     df_n['category'] = df_n['category'] + ' > ' + df_n['subcategory']
     df_n = df_n[[
-        'n_id',
         'title',
         'category',
         # 'abstract',
         # 'category_label',
         # 'subcategory_label',
-        # 'abstract_tfidf_40',
-        # 'title_tfidf_40',
     ]]
 
     return MINDDatasetVal(
@@ -313,7 +287,7 @@ def get_train_sample_batch():
 # %%
 if __name__ == '__main__':
     # %%
-    tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/paraphrase-distilroberta-base-v1')
+    tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
 
     # %%
     ds = get_train_dataset(base_dir='../data/mind-demo')
@@ -321,6 +295,7 @@ if __name__ == '__main__':
     # %%
     collate_fn = MINDCollateTrain(tokenizer)
     batch = collate_fn([ds[0], ds[1]])
+    # %%
     print(type(batch['x_hist']) is dict)
     print(type(batch['x_cand']) is dict)
 
