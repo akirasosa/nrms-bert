@@ -1,0 +1,18 @@
+note: 'MIND Large'
+
+data_params:
+  mind_path: ../data/mind-large
+  batch_size: 3
+  seed: 1
+
+module_params:
+  lr: 1e-5
+  weight_decay: 0.
+
+trainer_params:
+  epochs: 3
+  precision: 16
+  gpus: -1
+  val_check_interval: 0.2
+  weights_save_path: /mnt/ssdstuff/akirasosa/experiments
+  accumulate_grad_batches: 4

@@ -1,0 +1,16 @@
+note: 'Popularity MIND Large'
+
+data_params:
+  batch_size: 64
+  seed: 1
+
+module_params:
+  lr: 1e-5
+  weight_decay: 0.
+
+trainer_params:
+  epochs: 5
+  precision: 16
+  gpus: -1
+  accumulate_grad_batches: 1
+  weights_save_path: /mnt/ssdstuff/akirasosa/experiments
