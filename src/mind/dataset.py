@@ -210,9 +210,9 @@ class MINDCollateVal(_MINDCollateBase):
         )
 
 
-def get_train_dataset(base_dir: Union[str, Path]) -> MINDDatasetTrain:
+def _load_df(base_dir: Union[str, Path], split: str):
     df_b = load_behaviours_df(base_dir)
-    df_b = df_b[df_b['split'] == 'train']
+    df_b = df_b[df_b['split'] == split]
     df_b = df_b[['histories', 'candidates', 'labels']]
 
     df_n = load_news_df(base_dir)
@@ -224,6 +224,11 @@ def get_train_dataset(base_dir: Union[str, Path]) -> MINDDatasetTrain:
         # 'category_label',
         # 'subcategory_label',
     ]]
+    return df_b, df_n
+
+
+def get_train_dataset(base_dir: Union[str, Path]) -> MINDDatasetTrain:
+    df_b, df_n = _load_df(base_dir, 'train')
 
     return MINDDatasetTrain(
         df_behaviours=df_b,
@@ -232,19 +237,7 @@ def get_train_dataset(base_dir: Union[str, Path]) -> MINDDatasetTrain:
 
 
 def get_val_dataset(base_dir: Union[str, Path], tokenizer: PreTrainedTokenizer) -> MINDDatasetVal:
-    df_b = load_behaviours_df(base_dir)
-    df_b = df_b[df_b['split'] == 'valid']
-    df_b = df_b[['histories', 'candidates', 'labels']]
-
-    df_n = load_news_df(base_dir)
-    df_n['category'] = df_n['category'] + ' > ' + df_n['subcategory']
-    df_n = df_n[[
-        'title',
-        'category',
-        # 'abstract',
-        # 'category_label',
-        # 'subcategory_label',
-    ]]
+    df_b, df_n = _load_df(base_dir, 'valid')
 
     return MINDDatasetVal(
         df_behaviours=df_b,
@@ -254,19 +247,7 @@ def get_val_dataset(base_dir: Union[str, Path], tokenizer: PreTrainedTokenizer) 
 
 
 def get_test_dataset(base_dir: Union[str, Path], tokenizer: PreTrainedTokenizer) -> MINDDatasetVal:
-    df_b = load_behaviours_df(base_dir)
-    df_b = df_b[df_b['split'] == 'test']
-    df_b = df_b[['histories', 'candidates', 'labels']]
-
-    df_n = load_news_df(base_dir)
-    df_n['category'] = df_n['category'] + ' > ' + df_n['subcategory']
-    df_n = df_n[[
-        'title',
-        'category',
-        # 'abstract',
-        # 'category_label',
-        # 'subcategory_label',
-    ]]
+    df_b, df_n = _load_df(base_dir, 'test')
 
     return MINDDatasetVal(
         df_behaviours=df_b,
