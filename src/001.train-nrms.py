@@ -8,11 +8,12 @@ from typing import Dict, Sequence, Any, cast
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning import seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.metrics.functional import auroc
 from pytorch_lightning.utilities import move_data_to_device
 from torch.optim import Adam
+from torch.optim.lr_scheduler import OneCycleLR
 from tqdm import tqdm
 
 from libs.pytorch_lightning.logging import configure_logging
@@ -99,16 +100,16 @@ class PLModule(pl.LightningModule):
             lr=self.hp.lr,
             weight_decay=self.hp.weight_decay,
         )
-        # sched = {
-        #     'scheduler': OneCycleLR(
-        #         opt,
-        #         max_lr=self.hp.lr,
-        #         total_steps=len(self.train_dataloader()) * self.trainer.max_epochs,
-        #     ),
-        #     'interval': 'step',
-        # }
-        # return [opt], [sched]
-        return [opt]
+        sched = {
+            'scheduler': OneCycleLR(
+                opt,
+                max_lr=self.hp.lr,
+                total_steps=len(self.train_dataloader()) * self.trainer.max_epochs,
+            ),
+            'interval': 'step',
+        }
+        return [opt], [sched]
+        # return [opt]
 
     @cached_property
     def hp(self) -> ModuleParams:
@@ -132,7 +133,7 @@ def train(params: Params):
     logger.info(params.pretty())
 
     callbacks = [
-        # LearningRateMonitor(),
+        LearningRateMonitor(),
         # EarlyStopping(
         #     monitor='val_0_acc',
         #     patience=15,
@@ -173,8 +174,4 @@ def train(params: Params):
 if __name__ == '__main__':
     configure_logging()
     params = Params.load()
-    if params.do_cv:
-        for p in params.copy_for_cv():
-            train(p)
-    else:
-        train(params)
+    train(params)

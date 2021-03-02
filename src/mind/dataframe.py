@@ -10,6 +10,7 @@ from libs.pandas.cache import pd_cache
 @pd_cache(cache_dir='../cache')
 def load_behaviours_df(base_dir: Union[Path, str], drop_no_hist: bool = True) -> pd.DataFrame:
     base_dir = Path(base_dir)
+
     df_train = _load_behaviours_df(base_dir / 'train/behaviors.tsv')
     df_val = _load_behaviours_df(base_dir / 'valid/behaviors.tsv')
     if (base_dir / 'test').exists():
@@ -63,25 +64,10 @@ def load_news_df(base_dir: Union[Path, str]) -> pd.DataFrame:
     else:
         df_test = pd.DataFrame()
 
-    # df_train['split'] = 'train'
-    # df_val['split'] = 'valid'
-    # df_test['split'] = 'test'
-
     df: pd.DataFrame = pd.concat((df_train, df_val, df_test), ignore_index=True)
     df = df.drop_duplicates(subset=['n_id'])
 
     df['abstract'] = df['abstract'].fillna('')
-
-    # if 'demo' in str(base_dir):
-    #     mind_type = 'demo'
-    # else:
-    #     mind_type = 'large'
-
-    # abstract_tfidf_40 = joblib.load(f'../tmp/pipe-{mind_type}-abstract.joblib').transform(df['abstract'])
-    # df['abstract_tfidf_40'] = list(abstract_tfidf_40)
-
-    # title_tfidf_40 = joblib.load(f'../tmp/pipe-{mind_type}-title.joblib').transform(df['title'])
-    # df['title_tfidf_40'] = list(title_tfidf_40)
 
     # df['category_label'] = LabelEncoder().fit_transform(df['category'])
     # df['subcategory_label'] = LabelEncoder().fit_transform(df['subcategory'])
@@ -107,7 +93,7 @@ def _load_news_df(tsv_path):
 
 
 @pd_cache(cache_dir='../cache')
-def load_popularity_df(base_dir):
+def load_popularity_df(base_dir) -> pd.DataFrame:
     df_b = load_behaviours_df(base_dir, drop_no_hist=False)
     df_b = df_b[df_b['split'] != 'test']
 
@@ -121,20 +107,3 @@ def load_popularity_df(base_dir):
     df_p.columns = ['popularity']
 
     return df_p
-
-
-# %%
-if __name__ == '__main__':
-    # %%
-    df_b = load_behaviours_df('../data/mind-large')
-    df_n = load_news_df('../data/mind-large')
-    # %%
-    df_b = df_b[df_b['split'] == 'test']
-    # df_n = df_n[df_n['split'] == 'test']
-
-    # %%
-    df_n[df_n['n_id'] == 'N1850']
-
-    # %%
-    uniq_hist = set(np.concatenate(df_b['histories'].values))
-    'N1850' in uniq_hist
