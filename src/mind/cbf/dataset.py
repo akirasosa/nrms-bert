@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, AutoTokenizer
 
-from mind.batch import MINDBatch, ContentsEncoded
+from mind.cbf.batch import MINDBatch, ContentsEncoded
 from mind.dataframe import load_behaviours_df, load_news_df
 
 

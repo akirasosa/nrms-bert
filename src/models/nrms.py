@@ -4,7 +4,7 @@ from torch.nn import init
 from torch_geometric.utils import to_dense_batch
 from transformers import AutoModel
 
-from mind.batch import MINDBatch, ContentsEncoded
+from mind.cbf.batch import MINDBatch, ContentsEncoded
 
 
 def init_weights(m: nn.Module):
