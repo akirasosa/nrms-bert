@@ -25,6 +25,7 @@ class PopularityDataset(Dataset):
 @dataclass
 class PopularityCollate:
     tokenizer: PreTrainedTokenizerFast
+    is_test: bool = False
 
     def __call__(self, batch):
         x0, x1, y = zip(*batch)
@@ -36,5 +37,8 @@ class PopularityCollate:
             truncation=True,
             padding=True,
         )
+        if self.is_test:
+            return X
+
         y = torch.tensor(y).float()
         return X, y

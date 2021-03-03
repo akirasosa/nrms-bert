@@ -107,3 +107,15 @@ def load_popularity_df(base_dir) -> pd.DataFrame:
     df_p.columns = ['popularity']
 
     return df_p
+
+
+@pd_cache(cache_dir='../cache')
+def load_popularity_df_test(base_dir) -> pd.DataFrame:
+    df_b = load_behaviours_df(base_dir, drop_no_hist=False)
+    df_b = df_b[df_b['histories'].apply(len) == 0]
+    df_b = df_b[df_b['split'] == 'test']
+
+    df = pd.DataFrame(index=df_b['candidates'].explode().unique())
+    df['popularity'] = None
+
+    return df

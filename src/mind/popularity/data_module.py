@@ -6,8 +6,8 @@ from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from mind.dataframe import load_popularity_df, load_news_df
-from mind.params import DataParams
+from mind.dataframe import load_popularity_df, load_news_df, load_popularity_df_test
+from mind.params import DataParams, Params
 from mind.popularity.dataset import PopularityDataset, PopularityCollate
 
 
@@ -18,6 +18,7 @@ class PopularityDataModule(pl.LightningDataModule):
         self.params = params
         self.train_dataset: Optional[PopularityDataset] = None
         self.val_dataset: Optional[PopularityDataset] = None
+        self.test_dataset: Optional[PopularityDataset] = None
         self.tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
 
     def setup(self, stage: Optional[str] = None):
@@ -39,8 +40,12 @@ class PopularityDataModule(pl.LightningDataModule):
             df_train = df.iloc[train_idx]
             df_val = df.iloc[val_idx]
 
+        df_test = load_popularity_df_test(self.params.mind_path)
+        df_test = df_test.merge(df_n, left_index=True, right_index=True, how='left')
+
         self.train_dataset = PopularityDataset(df_train)
         self.val_dataset = PopularityDataset(df_val)
+        self.test_dataset = PopularityDataset(df_test)
 
     def train_dataloader(self, *args, **kwargs) -> DataLoader:
         return DataLoader(
@@ -62,3 +67,24 @@ class PopularityDataModule(pl.LightningDataModule):
             num_workers=cpu_count(),
             pin_memory=True,
         )
+
+    def test_dataloader(self, *args, **kwargs) -> Union[DataLoader, Sequence[DataLoader]]:
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.params.batch_size,
+            collate_fn=PopularityCollate(self.tokenizer, is_test=True),
+            shuffle=False,
+            # num_workers=cpu_count(),
+            pin_memory=True,
+        )
+
+
+# %%
+if __name__ == '__main__':
+    # %%
+    p = Params.load('./params/popularity/001.yaml')
+    dm = PopularityDataModule(p.data_params)
+    dm.setup()
+    # %%
+    loader = dm.test_dataloader()
+    print(next(iter(loader)))
