@@ -8,12 +8,11 @@ from typing import Dict, Sequence, Any, cast
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning import seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.metrics.functional import auroc
 from pytorch_lightning.utilities import move_data_to_device
 from torch.optim import Adam
-from torch.optim.lr_scheduler import OneCycleLR
 from tqdm import tqdm
 
 from libs.pytorch_lightning.logging import configure_logging
@@ -133,11 +132,6 @@ def train(params: Params):
 
     callbacks = [
         # LearningRateMonitor(),
-        # EarlyStopping(
-        #     monitor='val_0_acc',
-        #     patience=15,
-        #     mode='max'
-        # ),
     ]
     if params.t.checkpoint_callback:
         callbacks.append(

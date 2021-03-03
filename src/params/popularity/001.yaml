@@ -1,6 +1,7 @@
 note: 'Popularity MIND Large'
 
 data_params:
+  mind_path: ../data/mind-large
   batch_size: 64
   seed: 1
 
