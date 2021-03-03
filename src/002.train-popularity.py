@@ -37,15 +37,13 @@ class PLModule(pl.LightningModule):
             num_labels=1,
         )
         self.am = AverageMeterSet()
-        self.total_processed = 0
 
     def training_step(self, batch, batch_idx):
         X, y = batch
         out: SequenceClassifierOutput = self.model.forward(**X, labels=y)
         with torch.no_grad():
             n_processed = len(out.logits)
-            self.am.train_loss.update(out.loss.detach(), n_processed)
-            self.total_processed += n_processed
+            self.am.train_loss.update(out.loss, n_processed)
         return out.loss
 
     @torch.no_grad()
