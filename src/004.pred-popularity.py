@@ -4,13 +4,14 @@ import numpy as np
 import pandas as pd
 import torch
 from pytorch_lightning.utilities import move_data_to_device
+from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import DistilBertForSequenceClassification
+from transformers import DistilBertForSequenceClassification, AutoTokenizer
 
 from libs.pytorch_lightning.util import load_pretrained_dict
-from mind.dataframe import load_behaviours_df
+from mind.dataframe import load_behaviours_df, load_news_df, load_popularity_df_test
 from mind.params import Params, DataParams
-from mind.popularity.data_module import PopularityDataModule
+from mind.popularity.dataset import PopularityDataset, PopularityCollate
 
 
 def load_model(ckpt_path: str):
@@ -26,13 +27,28 @@ def load_model(ckpt_path: str):
 
 
 def get_loader(params: DataParams):
-    dm = PopularityDataModule(params)
-    dm.setup()
-    return dm.test_dataloader()
+    df_n = load_news_df(params.mind_path)
+    df = load_popularity_df_test(params.mind_path)
+    df = df.merge(df_n, left_index=True, right_index=True, how='left')
+
+    tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
+    loader = DataLoader(
+        PopularityDataset(df),
+        batch_size=params.batch_size,
+        collate_fn=PopularityCollate(tokenizer, is_test=True),
+        shuffle=False,
+        # num_workers=cpu_count(),
+        pin_memory=True,
+    )
+
+    return loader
 
 
-def make_partial_sub(logits: np.ndarray):
-    df_b = load_behaviours_df('../data/mind-large')
+def make_popularity_sub(logits: np.ndarray):
+    df_b = load_behaviours_df(
+        '../data/mind-large',
+        drop_no_hist=False,
+    )
     df_b = df_b[df_b['split'] == 'test']
 
     cand_sizes = df_b['candidates'].apply(len)
@@ -48,7 +64,7 @@ def make_partial_sub(logits: np.ndarray):
     return pd.DataFrame(
         index=df_b.index,
         data=sub_rows,
-        columns=['popularity'],
+        columns=['preds'],
     )
 
 
@@ -71,7 +87,7 @@ def main():
     out_dir = Path('../tmp')
     out_dir.mkdir(exist_ok=True)
 
-    df_sub = make_partial_sub(preds)
+    df_sub = make_popularity_sub(preds)
     df_sub.to_parquet(out_dir / 'sub_popularity.pqt')
 
 

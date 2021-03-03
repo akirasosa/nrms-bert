@@ -24,7 +24,7 @@ def load_behaviours_df(base_dir: Union[Path, str], drop_no_hist: bool = True) ->
 
     df: pd.DataFrame = pd.concat((df_train, df_val, df_test), ignore_index=True)
 
-    df['time'] = pd.to_datetime(df['time'])
+    df['time'] = pd.to_datetime(df['time'], format='%m/%d/%Y %I:%M:%S %p')
     df['histories'] = df['histories'].fillna('').str.split()
     df['candidates'] = df['impressions'].str.strip() \
         .str.replace(r'-[01]', '', regex=True) \
