@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from mind.cbf.dataset import MINDDatasetTrain, MINDDatasetVal, get_train_dataset, get_val_dataset, MINDCollateTrain, \
+from mind.main.dataset import MINDDatasetTrain, MINDDatasetVal, get_train_dataset, get_val_dataset, MINDCollateTrain, \
     MINDCollateVal
 from mind.params import DataParams
 

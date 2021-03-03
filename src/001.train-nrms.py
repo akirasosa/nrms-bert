@@ -18,9 +18,9 @@ from tqdm import tqdm
 from libs.pytorch_lightning.logging import configure_logging
 from libs.torch.avg_meter import AverageMeter
 from libs.torch.metrics import ndcg_score
-from mind.cbf.batch import MINDBatch
-from mind.cbf.data_module import MINDDataModule
-from mind.cbf.dataset import MINDDatasetVal
+from mind.main.batch import MINDBatch
+from mind.main.data_module import MINDDataModule
+from mind.main.dataset import MINDDatasetVal
 from mind.params import ModuleParams, Params
 from models.nrms import NRMS
 
