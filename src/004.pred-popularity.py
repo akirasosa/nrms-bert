@@ -56,7 +56,7 @@ def make_popularity_sub(logits: np.ndarray):
     slices = np.concatenate(([0], np.cumsum(cand_sizes.values)))
     slices = [slice(a, b) for a, b in zip(slices, slices[1:])]
 
-    assert len(df_b['b_id'].values) == slices
+    assert len(df_b['b_id'].values) == len(slices), f"{len(df_b['b_id'].values)}, {len(slices)}"
 
     sub_rows = []
     for b_id, s in tqdm(zip(df_b['b_id'].values, slices), total=len(df_b)):
