@@ -49,11 +49,14 @@ def make_popularity_sub(logits: np.ndarray):
         '../data/mind-large',
         drop_no_hist=False,
     )
+    df_b = df_b[df_b['histories'].apply(len) == 0]
     df_b = df_b[df_b['split'] == 'test']
 
     cand_sizes = df_b['candidates'].apply(len)
     slices = np.concatenate(([0], np.cumsum(cand_sizes.values)))
     slices = [slice(a, b) for a, b in zip(slices, slices[1:])]
+
+    assert len(df_b['b_id'].values) == slices
 
     sub_rows = []
     for b_id, s in tqdm(zip(df_b['b_id'].values, slices), total=len(df_b)):
@@ -62,7 +65,7 @@ def make_popularity_sub(logits: np.ndarray):
         sub_rows.append(f'{b_id} [{rank}]')
 
     return pd.DataFrame(
-        index=df_b.index,
+        index=df_b['b_id'],
         data=sub_rows,
         columns=['preds'],
     )

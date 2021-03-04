@@ -66,6 +66,8 @@ def make_main_sub(logits: np.ndarray):
     slices = np.concatenate(([0], np.cumsum(cand_sizes.values)))
     slices = [slice(a, b) for a, b in zip(slices, slices[1:])]
 
+    assert len(df_b['b_id'].values) == slices
+
     sub_rows = []
     for b_id, s in tqdm(zip(df_b['b_id'].values, slices), total=len(df_b)):
         rank = (logits[s] * -1).argsort().argsort() + 1
@@ -73,7 +75,7 @@ def make_main_sub(logits: np.ndarray):
         sub_rows.append(f'{b_id} [{rank}]')
 
     return pd.DataFrame(
-        index=df_b.index,
+        index=df_b['b_id'],
         data=sub_rows,
         columns=['preds'],
     )
