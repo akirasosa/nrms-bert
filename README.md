@@ -6,7 +6,7 @@ NRMS has shown dominant performance in [MIND dataset competition](https://msnews
 
 | | MIND Large Val | Test |
 | ---  | ---  | --- |
-| AUC | | 0.7103 |
+| AUC | 0.71146 | 0.7103 |
 
 ## Getting Started
 
